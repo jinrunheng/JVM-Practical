@@ -641,8 +641,123 @@ myTestClass2.b : 1
 
 被动使用：
 
-- 子类使用父类的静态变量，不会导致父类的初始化
+- 子类使用父类的静态变量，不会导致子类的初始化
 
-- 
+  看个示例：
 
-  
+  **Parent**
+
+  ```java
+  public class Parent {
+      public static String parent = "parent";
+      static {
+          System.out.println("Parent class init");
+      }
+  }
+  ```
+
+  **Child**
+
+  ```java
+  public class Child extends Parent{
+      static {
+          System.out.println("Child class init");
+      }
+  }
+  ```
+
+  **Test**
+
+  ```java
+  public class Test {
+      public static void main(String[] args) {
+          System.out.println(Child.parent);
+      }
+  }
+  ```
+
+  程序输出结果为：
+
+  ```
+  Parent class init
+  parent
+  ```
+
+  我们看到子类并没有初始化
+
+- 通过数组定义来引用类，不会导致类的初始化
+
+  示例：
+
+  ```java
+  public class Test {
+    public static void main(String[] args){
+      Child[] children = new Child[10];;
+    }
+  }
+  ```
+
+  程序运行后不会导致类的初始化
+
+- 访问常量（`final`）不会导致类的初始化
+
+  示例：
+
+  **Child**
+
+  ```java
+  public class Child extends Parent{
+      public static final String CONSTANT = "HELLO";
+      static {
+          System.out.println("Child class init");
+      }
+  }
+  ```
+
+  **Test**
+
+  ```java
+  public class Test {
+      public static void main(String[] args) {
+          System.out.println(Child.CONSTANT);
+      }
+  }
+  ```
+
+  运行结果为：
+
+  ```
+  HELLO
+  ```
+
+  不会导致类的初始化
+
+##### 类的卸载
+
+- 当代表一个类的`Class`对象不再被引用，那么`Class`对象的生命周期就结束了，对应的在方法区中的数据也会被卸载
+- `JVM`自带的类加载器装载的类，是不会卸载掉，由用户自定义的类加载器加载的类是可以卸载的
+
+##### 小结
+
+- 理解类从加载，连接，初始化到卸载的生命周秋
+- 理解类加载，类加载器，理解双亲委派模型
+- 理解并掌握各种主动使用类的初始化时机
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
