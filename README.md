@@ -1,7 +1,7 @@
 # JVM-Practical
 JVM实战
 
-| JVM实战章节                            | 源码与笔记                                                   |
+| JVM实战                                | 源码与笔记                                                   |
 | -------------------------------------- | ------------------------------------------------------------ |
 | **第1章 课程导学与准备工作**           |                                                              |
 | 第1章学习笔记                          | [无笔记]                                                     |
@@ -29,6 +29,20 @@ JVM实战
 | 3-6 类连接和初始化                     | [code](https://github.com/jinrunheng/JVM-Practical/tree/main/chapter3/src/main/java/classinit) |
 | 3-7 案例：类的主动初始化               | [code](https://github.com/jinrunheng/JVM-Practical/tree/main/chapter3/src/main/java/classinit) |
 | 3-8 案例：类的初始化机制和顺序         | [code](https://github.com/jinrunheng/JVM-Practical/tree/main/chapter3/src/main/java/section8) |
+| **第四章 内存分配**                    |                                                              |
+| 第四章学习笔记                         | [笔记](https://github.com/jinrunheng/JVM-Practical/blob/main/chapter4/note.md) |
+| 4-1 JVM的简化架构和运行时数据区        | [无代码]                                                     |
+| 4-2 Java堆内存模型和分配               | [无代码]                                                     |
+| 4-3 案例：Trace跟踪和Java堆堆参数配置  | [code](https://github.com/jinrunheng/JVM-Practical/tree/main/chapter4/src/main/java/section3/memory) |
+| 4-4 案例：新生代配置和GC日志格式       | [无代码]                                                     |
+| 4-5 案例：使用MAT进行内存分析          | [code](https://github.com/jinrunheng/JVM-Practical/tree/main/chapter4/src/main/java/section5) |
+| 4-6 案例：堆，栈，元空间的参数配置     | [code](https://github.com/jinrunheng/JVM-Practical/tree/main/chapter4/src/main/java/section6) |
+| **第五章 字节码执行引擎**              |                                                              |
+| 第五章学习笔记                         |                                                              |
+| 5-1 栈帧和局部变量表                   |                                                              |
+| 5-2 案例：slot是复用的                 |                                                              |
+| 5-3 案例：操作数栈                     |                                                              |
+| 5-4 静态分派和动态分派                 |                                                              |
 
 
 
