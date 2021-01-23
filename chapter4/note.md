@@ -125,9 +125,321 @@ heap区分为：
 
 #### 4-3 Trace跟踪和Java堆的参数配置
 
+##### Trace跟踪参数
+
+- 可以打印GC的简要信息：`-Xlog:gc`
+- 打印GC的详细信息：`-Xlog:gc*`
+- 指定GC log的位置，以及文件输出：`-Xlog:gc:garbage-collection.log`
+- 每一次GC后，都打印堆信息：`-Xlog:gc+heap=debug`
+
+##### GC日志格式
+
+- ​	GC发生的时间，也就是JVM从启动以来经过的秒数
+- 日志级别信息，和日志类型标记
+- GC识别号
+- GC类型和说明GC的原因
+- 容量：GC前容量 -> GC后容量（该区域总容量）
+- GC持续时间，单位秒。有的收集器会有更详细的描述，比如：user表示应哟哦那个程序消耗的时间，sys表示系统内核消耗的时间，real表示操作从开始到结束的时间
+
+##### Java堆堆参数
+
+- Xms：初始堆大小，默认物理内存的1/64
+
+  示例程序：
+
+  ```java
+  public class Test1 {
+      public static void main(String[] args) {
+          System.out.println("totalMemory = " + Runtime.getRuntime().totalMemory()/1024/1024 + "MB");
+          System.out.println("freeMemory = " + Runtime.getRuntime().freeMemory()/1024/1024 + "MB");
+          System.out.println("maxMemory = " + Runtime.getRuntime().maxMemory()/1024/1024 + "MB");
+      }
+  }
+  ```
+
+  在未设置Xms参数之前程序的输出结果为：
+
+  ```
+  totalMemory = 128MB
+  freeMemory = 125MB
+  maxMemory = 2048MB
+  ```
+
+  然后我们在Idea下的`Run -> Edit Configurations -> VM options`下设置堆初始化内存大小为10M，即：`-Xms10m`
+
+  接着重新运行程序：
+
+  ```
+  totalMemory = 10MB
+  freeMemory = 7MB
+  maxMemory = 2048MB
+  ```
+
+- Xmx：初始化最大堆的大小，默认物理内存的1/4
+
+  我们还在Idea下的`Run -> Edit Configurations -> VM options`下设置最大堆的大小为10M，即：`-Xms10m -Xmx10m`
+
+  程序运行结果为：
+
+  ```
+  totalMemory = 10MB
+  freeMemory = 7MB
+  maxMemory = 10MB
+  ```
+
+- 同常我们都会设置Xms和Xmx数值相等，这样做的好处是GC过后，JVM不必重新调整堆的大小，减少了系统每次分配内存的开销
+
 #### 4-4 新生代配置和GC日志格式
+
+刚刚我们介绍完了Xms和Xmx
+
+##### Java堆的参数
+
+- Xms：初始堆大小，默认是物理内存的1/64
+- Xmx：最大堆大小，默认物理内存的1/4
+- Xmn：新生代大小，默认整个堆的3/8；新生代主要存放新创建的对象
+- -XX:+HeapDumpOnOutOfMemoryError:OOM时导出堆到文件
+- -XX:+HeapDumpPath:导出OOM的路径
+
+综合实践：
+
+在`VM options`中输入：
+
+```
+-XX:+UseConcMarkSweepGC -XX:InitialHeapSize=9m -Xmx10m -Xmn3m -Xlog:gc+heap=debug
+```
+
+程序为：
+
+```java
+import java.util.ArrayList;
+import java.util.List;
+
+public class Test1 {
+    private byte[] bs = new byte[1024 * 1024]; // 1MB
+
+    public static void main(String[] args) {
+        List<Test1> list = new ArrayList<>();
+        int num = 0;
+        try {
+            while (true) {
+                list.add(new Test1());
+                num++;
+            }
+        } catch (Throwable err) {
+            System.out.println("error, num = " + num);
+            err.printStackTrace();
+        }
+
+
+        System.out.println("totalMemory = " + Runtime.getRuntime().totalMemory() / 1024.0 / 1024.0 + "MB");
+        System.out.println("freeMemory = " + Runtime.getRuntime().freeMemory() / 1024.0 / 1024.0 + "MB");
+        System.out.println("maxMemory = " + Runtime.getRuntime().maxMemory() / 1024.0 / 1024.0 + "MB");
+    }
+}
+
+```
+
+程序最后一次GC输出结果：
+
+```
+[0.150s][debug][gc,heap] GC(8) Heap before GC invocations=5 (full 3): par new generation   total 2816K, used 2052K [0x00000007ff600000, 0x00000007ff900000, 0x00000007ff900000)
+[0.150s][debug][gc,heap] GC(8)   eden space 2560K,  80% used [0x00000007ff600000, 0x00000007ff8013c0, 0x00000007ff880000)
+[0.150s][debug][gc,heap] GC(8)   from space 256K,   0% used [0x00000007ff880000, 0x00000007ff880000, 0x00000007ff8c0000)
+[0.150s][debug][gc,heap] GC(8)   to   space 256K,   0% used [0x00000007ff8c0000, 0x00000007ff8c0000, 0x00000007ff900000)
+[0.150s][debug][gc,heap] GC(8)  concurrent mark-sweep generation total 7168K, used 6914K [0x00000007ff900000, 0x0000000800000000, 0x0000000800000000)
+[0.150s][debug][gc,heap] GC(8)  Metaspace       used 6092K, capacity 6159K, committed 6528K, reserved 1056768K
+[0.150s][debug][gc,heap] GC(8)   class space    used 525K, capacity 538K, committed 640K, reserved 1048576K
+[0.153s][info ][gc,heap] GC(8) ParNew: 2052K->2052K(2816K)
+[0.153s][info ][gc,heap] GC(8) CMS: 6914K->6902K(7168K)
+[0.153s][debug][gc,heap] GC(8) Heap after GC invocations=6 (full 4): par new generation   total 2816K, used 2052K [0x00000007ff600000, 0x00000007ff900000, 0x00000007ff900000)
+[0.153s][debug][gc,heap] GC(8)   eden space 2560K,  80% used [0x00000007ff600000, 0x00000007ff801330, 0x00000007ff880000)
+[0.153s][debug][gc,heap] GC(8)   from space 256K,   0% used [0x00000007ff880000, 0x00000007ff880000, 0x00000007ff8c0000)
+[0.153s][debug][gc,heap] GC(8)   to   space 256K,   0% used [0x00000007ff8c0000, 0x00000007ff8c0000, 0x00000007ff900000)
+[0.153s][debug][gc,heap] GC(8)  concurrent mark-sweep generation total 7168K, used 6902K [0x00000007ff900000, 0x0000000800000000, 0x0000000800000000)
+[0.153s][debug][gc,heap] GC(8)  Metaspace       used 6092K, capacity 6159K, committed 6528K, reserved 1056768K
+[0.153s][debug][gc,heap] GC(8)   class space    used 525K, capacity 538K, committed 640K, reserved 1048576K
+[0.156s][info ][gc,heap] GC(9) Old: 6902K->6899K(7168K)
+error, num = 8
+totalMemory = 9.75MB
+freeMemory = 0.29339599609375MB
+maxMemory = 9.75MB
+java.lang.OutOfMemoryError: Java heap space
+	at section3.memory.Test1.<init>(Test1.java:9)
+	at section3.memory.Test1.main(Test1.java:16)
+```
 
 #### 4-5 案例：使用MAT进行内存分析
 
+Trace跟踪参数：
+
+- 指定GC log文件的位置，以文件输出：`-Xlog:gc:日志名称`
+
+例如：
+
+```
+-Xlog:gc:garbage-collection.log
+```
+
 #### 4-6 案例：堆，栈，元空间的参数配置
+
+##### Java堆的参数
+
+- `-XX:NewRatio`:老年代与新生代的比值，如果`xms=xmx`,且设置了`xmn`的情况下，该参数不用设置
+
+在VM options中输入
+
+```
+-XX:+UseConcMarkSweepGC -Xmx10m -XX:NewRatio=1 -Xlog:gc+heap=debug
+```
+
+这里面指的是老年代与新生代的比值为1
+
+程序输出最后的结果：
+
+```
+[0.152s][debug][gc,heap] GC(5) Heap after GC invocations=4 (full 4): par new generation   total 4608K, used 3090K [0x00000007ff600000, 0x00000007ffb00000, 0x00000007ffb00000)
+[0.152s][debug][gc,heap] GC(5)   eden space 4096K,  75% used [0x00000007ff600000, 0x00000007ff904918, 0x00000007ffa00000)
+[0.152s][debug][gc,heap] GC(5)   from space 512K,   0% used [0x00000007ffa00000, 0x00000007ffa00000, 0x00000007ffa80000)
+[0.152s][debug][gc,heap] GC(5)   to   space 512K,   0% used [0x00000007ffa80000, 0x00000007ffa80000, 0x00000007ffb00000)
+[0.152s][debug][gc,heap] GC(5)  concurrent mark-sweep generation total 5120K, used 4838K [0x00000007ffb00000, 0x0000000800000000, 0x0000000800000000)
+[0.152s][debug][gc,heap] GC(5)  Metaspace       used 6097K, capacity 6159K, committed 6528K, reserved 1056768K
+[0.152s][debug][gc,heap] GC(5)   class space    used 526K, capacity 538K, committed 640K, reserved 1048576K
+```
+
+我们可以看到新生代+`from`或是`to`的大小为`5120`
+
+`cms`老年代的大小为`5120`
+
+两者的关系为`1:1`
+
+- `-XX:SurvivorRatio`:
+
+  它定义了新生代中Eden区域和Survivor区域(From幸存区或To幸存区)的比例，默认为8
+
+  也就是说，Eden占新生代的8/10，From幸存区和To幸存区各占新生代的`1/10`
+
+可以参考计算公式：
+
+```
+Eden = (R*Y)/(R+1+1)
+From = Y/(R+1+1)
+To   = Y/(R+1+1)
+```
+
+其中：
+
+R:SurvivorRatio比例
+
+Y:新生代空间大小
+
+案例：
+
+VM options设置：
+
+```
+-XX:+UseConcMarkSweepGC -Xmx15m -XX:NewRatio=3 -Xlog:gc+heap=debug -XX:SurvivorRatio=8
+```
+
+程序输出最后的GC日志：
+
+```
+[0.183s][debug][gc,heap] GC(8) Heap after GC invocations=7 (full 4): par new generation   total 3712K, used 3074K [0x00000007ff000000, 0x00000007ff400000, 0x00000007ff400000)
+[0.183s][debug][gc,heap] GC(8)   eden space 3328K,  92% used [0x00000007ff000000, 0x00000007ff300950, 0x00000007ff340000)
+[0.183s][debug][gc,heap] GC(8)   from space 384K,   0% used [0x00000007ff340000, 0x00000007ff340000, 0x00000007ff3a0000)
+[0.183s][debug][gc,heap] GC(8)   to   space 384K,   0% used [0x00000007ff3a0000, 0x00000007ff3a0000, 0x00000007ff400000)
+[0.183s][debug][gc,heap] GC(8)  concurrent mark-sweep generation total 12288K, used 12027K [0x00000007ff400000, 0x0000000800000000, 0x0000000800000000)
+[0.183s][debug][gc,heap] GC(8)  Metaspace       used 6129K, capacity 6191K, committed 6528K, reserved 1056768K
+[0.183s][debug][gc,heap] GC(8)   class space    used 532K, capacity 570K, committed 640K, reserved 1048576K
+```
+
+我们可以看到Eden区大概占据了新生代的8/10
+
+- `-XX:+HeapDumpOnOutOfMemoryError`:OOM时导出堆到文件
+- `-XX:+HeapDumpPath`:导出OOM的路径
+- `-XX:OnOutOfMemoryError`:在OOM时，执行一个脚本
+
+##### Java栈的参数
+
+- `-Xss`:通常只有几百K的大小，决定了函数调用的深度
+
+示例程序：
+
+```java
+public class TestStack {
+    private int num = 0;
+
+    private int callMe(int a, int b) {
+        num++;
+        return callMe(a + num, b + num);
+    }
+
+    public static void main(String[] args) {
+        TestStack testStack = new TestStack();
+        try {
+            testStack.callMe(1, 1);
+        } catch (Throwable e) {
+            System.out.println("call times = " + testStack.num);
+        }
+    }
+}
+```
+
+该程序是一个递归调用的死循环，其中`num`变量作为计数器可以计数我们递归栈的深度，也就是递归调用了多少次才会`StackOverflow`
+
+程序输出：
+
+```
+call times = 15706
+java.lang.StackOverflowError
+	at section6.TestStack.callMe(TestStack.java:8)
+	at section6.TestStack.callMe(TestStack.java:8)
+	at section6.TestStack.callMe(TestStack.java:8)
+	at section6.TestStack.callMe(TestStack.java:8)
+	at section6.TestStack.callMe(TestStack.java:8)
+	... ...
+```
+
+我们可以通过在VM options中设置参数`-Xss`，来改变调用栈的大小
+
+VM options中设置：
+
+```
+-Xss2m
+```
+
+也就是说设置栈的大小为`2MB`
+
+接下来执行程序，输出的结果为：
+
+```
+call times = 47089
+java.lang.StackOverflowError
+	at section6.TestStack.callMe(TestStack.java:8)
+	at section6.TestStack.callMe(TestStack.java:8)
+	at section6.TestStack.callMe(TestStack.java:8)
+	at section6.TestStack.callMe(TestStack.java:8)
+	at section6.TestStack.callMe(TestStack.java:8)
+	at section6.TestStack.callMe(TestStack.java:8)
+	... ...
+```
+
+我们看到，递归调用执行的次数大大提升，说明我们的设置是有效的
+
+##### 元空间的参数
+
+- `-XX:MetaspaceSize`:初始空间大小
+- `-XX:MaxMetaspaceSize`:最大空间，默认是没有限制的
+- `-XX:MinMetaspaceFreeRatio`:在GC之后，最小的Metaspace剩余空间容量的百分比
+- `-XX:MaxMetaspaceFreeRatio`:在GC之后，最大的Metaspace剩余空间容量的百分比
+
+##### 章节小结
+
+- 重点是Java堆内存的参数
+
+
+
+
+
+
 
