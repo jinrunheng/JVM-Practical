@@ -38,11 +38,11 @@ JVM实战
 | 4-5 案例：使用MAT进行内存分析          | [code](https://github.com/jinrunheng/JVM-Practical/tree/main/chapter4/src/main/java/section5) |
 | 4-6 案例：堆，栈，元空间的参数配置     | [code](https://github.com/jinrunheng/JVM-Practical/tree/main/chapter4/src/main/java/section6) |
 | **第五章 字节码执行引擎**              |                                                              |
-| 第五章学习笔记                         |                                                              |
-| 5-1 栈帧和局部变量表                   |                                                              |
-| 5-2 案例：slot是复用的                 |                                                              |
-| 5-3 案例：操作数栈                     |                                                              |
-| 5-4 静态分派和动态分派                 |                                                              |
+| 第五章学习笔记                         | [笔记](https://github.com/jinrunheng/JVM-Practical/blob/main/chapter5/note.md) |
+| 5-1 栈帧和局部变量表                   | [code](https://github.com/jinrunheng/JVM-Practical/tree/main/chapter5/src/main/java/section1/execute) |
+| 5-2 案例：slot是复用的                 | [code](https://github.com/jinrunheng/JVM-Practical/tree/main/chapter5/src/main/java/section2) |
+| 5-3 案例：操作数栈                     | [code](https://github.com/jinrunheng/JVM-Practical/tree/main/chapter5/src/main/java/section3) |
+| 5-4 静态分派和动态分派                 | [code](https://github.com/jinrunheng/JVM-Practical/tree/main/chapter5/src/main/java/section4) |
 
 
 
