@@ -538,3 +538,66 @@ STW的危害是长时间服务停止，没有响应；对于HA系统，可能引
 - 优点：解决了内存碎片问题
 - 缺点：整理阶段，由于移动了存活对象的位置，所以需要去更新引用
 
+#### 6-6 垃圾收集器基础和串行收集器
+
+##### 垃圾收集器概述
+
+前面讨论的垃圾收集算法只是内存回收的方法，垃圾收集器就来具体实现这些算法并实现内存回收
+
+因此，不同厂商，不同版本的虚拟机实现垃圾收集器的差别是很大的，HotSpot包含的收集器如下图所示：
+
+<img src="https://tva1.sinaimg.cn/large/008eGmZEgy1gn1es2zrh7j317q0lggp7.jpg" alt="image-20210126211644028" style="zoom:50%;" align="left"/>
+
+##### 串行收集器
+
+串行收集器(Serial/Serial Old)，是一个单线程的收集器，在垃圾收集时，会发生**Stop-the-world**
+
+串行收集器运行示意图：
+
+<img src="https://tva1.sinaimg.cn/large/008eGmZEgy1gn1f7yh76zj31b80kudka.jpg" alt="image-20210126213212246" style="zoom:50%;" align="left"/>
+
+串行收集器：
+
+- 优缺点：
+
+  简单，对于单cpu，由于没有多线程的交互开销，可能更高效，是默认的Client模式下的新生代收集器
+
+- 使用：
+
+  `-XX:+UseSerialGC`来开启，会使用：`Serial + Serial Old`的收集器组合
+
+- 对于串行收集器，新生代使用复制算法，老年代使用标记-整理算法
+
+#### 6-7 并行收集器和Parallel Scavenge收集器
+
+##### 并行收集器:ParNew
+
+并行收集器使用多线程进行垃圾回收，在垃圾收集时，会**Stop-the-World**
+
+ParNew 收集器运行示意图：
+
+<img src="https://tva1.sinaimg.cn/large/008eGmZEgy1gn1g7pmnelj318o0j278x.jpg" alt="image-20210126220627379" style="zoom:50%;" align="left"/>
+
+并行收集器：
+
+- 在并发能力好的CPU环境里，它停顿的时间要比串行收集器短；但对于单CPU或并发能力较差的CPU，由于多线程的交互开销，可能比串行收集器更差
+- 是Server模式下首选的新生代收集器，且能和CMS收集器配合使用
+- 已经不再使用`-XX:+UseParNewGC`来单独开启
+- `-XX:ParallelGCThreads`:可以指定并行线程数，最好是与CPU数量一致
+- 只在新生代使用，为复制算法
+
+##### 新生代Parallel Scavenge收集器
+
+新生代Parallel Scavenge收集器/Parallel Old 收集器：是一个应用于新生代的，使用复制算法的并行收集器
+
+它本身和ParNew很类似，但是它更关注吞吐量，能最高效率的利用CPU，非常适合运行后台应用
+
+新生代Parallel Scavenge 收集器运行示意图：
+
+<img src="https://tva1.sinaimg.cn/large/008eGmZEgy1gn1g5qji9dj319m0jq43v.jpg" alt="image-20210126220429430" style="zoom:50%;" align="left"/>
+
+新生代Parallel Scavenge收集器:
+
+- 使用`-XX:+UseParallelGC`来开启
+- 使用`-XX:+UseParallelOldGC`来开启老年代使用`Parallel Old`收集器，使用`Parallel Scavenge + Parallel Old`的收集器组合
+- `-XX:MaxGCPauseMillis`：设置GC的最大停顿时间
