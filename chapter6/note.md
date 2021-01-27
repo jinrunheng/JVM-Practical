@@ -570,11 +570,11 @@ STW的危害是长时间服务停止，没有响应；对于HA系统，可能引
 
 #### 6-7 并行收集器和Parallel Scavenge收集器
 
-##### 并行收集器:ParNew
+并行收集器:ParNew
 
 并行收集器使用多线程进行垃圾回收，在垃圾收集时，会**Stop-the-World**
 
-ParNew 收集器运行示意图：
+##### ParNew 收集器运行示意图：
 
 <img src="https://tva1.sinaimg.cn/large/008eGmZEgy1gn1g7pmnelj318o0j278x.jpg" alt="image-20210126220627379" style="zoom:50%;" align="left"/>
 
@@ -601,3 +601,227 @@ ParNew 收集器运行示意图：
 - 使用`-XX:+UseParallelGC`来开启
 - 使用`-XX:+UseParallelOldGC`来开启老年代使用`Parallel Old`收集器，使用`Parallel Scavenge + Parallel Old`的收集器组合
 - `-XX:MaxGCPauseMillis`：设置GC的最大停顿时间
+
+#### 6-8 CMS收集器
+
+CMS(Concurrent Mark and Sweep)并发标记清除收集器分为：
+
+- 初始标记：只标记GC Roots能直接关联到的对象
+- 并发标记：进行GC Roots Tracing的过程
+- 重新标记：修正并发标记期间，因程序运行导致标记发生变化的那一部分对象
+- 并发清除：并发回收垃圾对象
+
+##### CMS收集器运行示意图
+
+<img src="https://tva1.sinaimg.cn/large/008eGmZEgy1gn2mcshh0tj31cg0i8dlz.jpg" alt="image-20210127222436375" style="zoom:50%;" align="left"/>
+
+可以看出**初始标记**阶段和**重新标记**阶段是没有用户线程的，也就是这两个阶段还是会发生**Stop-the-World**
+
+**并发标记**阶段和**并发清除**阶段中GC和用户线程是一起在跑的
+
+CMS收集器是使用标记清除算法，多线程并发收集的垃圾收集器
+
+最后的重制线程，指的是清空跟收集相关的数据并重置，为下一次收集做准备
+
+CMS收集器的优缺点：
+
+- 优点：低停顿，并发执行
+- 缺点：
+  - 并发执行，对CPU资源压力大
+  - CMS无法处理在CMS处理过程中产生的垃圾，可能导致FullGC
+  - 采用标记清除算法，会到你大量碎片，从而在分配大对象的时候，可能触发FullGC
+
+CMS收集器的开启方式：
+
+在VM options中添加
+
+```
+-XX:UseConcMarkSweepGC
+```
+
+它会使用ParNew + CMS + Serial Old的收集器组合，Serial Old将作为CMS出错的后备收集器
+
+```
+-XX:CMSInitiatingOccupancyFraction:设置CMS收集器在老年代空间被使用多少后触发回收，默认为80%
+```
+
+#### 6-9 G1收集器
+
+G1(Garbage-First)收集器
+
+G1收集器是一款面向服务端应用的收集器，与其他收集器相比，具有如下特点：
+
+1. G1把内存划分为多个独立的区域(Region)
+
+2. G1仍然采用分代的思想，保留了新生代和老年代，但它们不再是物理隔离的，而是一部分Region的集合，且不需要Region是连续的
+
+   示意图：
+
+   <img src="https://tva1.sinaimg.cn/large/008eGmZEgy1gn2n1wbyc2j30xq0m2tbp.jpg" alt="image-20210127224839078" style="zoom:50%;" align="left"/>
+
+   我们可以看到整个堆内存被划分成了一块一块的Region，每块Region既可以当成Old Generation,也可以当成是Survior Space 或是 Eden Space；而且它们之间没必要是连续的。空闲区域也叫做Free-Region
+
+3. G1能充分利用多CPU，多核环境硬件优势，尽量缩短STW
+
+4. G1整体采用标记-整理算法，局部是通过复制算法，不会产生内存碎片
+
+5. G1的停顿是可以预测的，能明确指定在一个时间段内，消耗在垃圾收集上的时间不能超过多久
+
+6. G1跟踪各个Region里面垃圾堆的价值大小，在后台维护一个优先列表，每次根据允许的时间来回收价值最大的区域，从而保证在有限时间内的高效收集。那怎么定义价值呢？很简答，哪些Region里面的垃圾最多就是价值最大
+
+G1收集器同CMS类似，也分为四个阶段：
+
+- 初始标记：只标记GC Roots能直接关联到的对象
+- 并发标记：进行GC Roots Tracing的过程
+- 最终标记：修正并发标记期间，因程序运行导致标记发生变化的那一部分对象
+- 筛选回收：根据时间来进行价值最大化的回收
+
+##### G1收集器运行示意图：
+
+<img src="https://tva1.sinaimg.cn/large/008eGmZEgy1gn2nojpp6rj31ce0j8n3h.jpg" alt="image-20210127231019092" style="zoom:50%;" align="left"/>
+
+##### G1收集器新生代回收过程
+
+<img src="/Users/macbook/Library/Application Support/typora-user-images/image-20210127232510778.png" alt="image-20210127232510778" style="zoom: 33%;" align="left"/>
+
+如图所示
+
+绿色部分为新生代，蓝色部分为老年代
+
+现在要对新生代的区域进行垃圾回收：
+
+<img src="https://tva1.sinaimg.cn/large/008eGmZEgy1gn2o8n9t2oj317o0hon0s.jpg" alt="image-20210127232942954" style="zoom:33%;" align="left"/>
+
+新生代回收无非是三种出路：
+
+1. 直接被回收掉
+2. 存活一部分到Survivor区
+3. Survivor区到老年代
+
+新生代回收之后：
+
+<img src="https://tva1.sinaimg.cn/large/008eGmZEgy1gn2oj4iaj6j316m0gomzm.jpg" alt="image-20210127233951089" style="zoom:33%;" align="left"/>
+
+这个算法是典型的**复制算法**
+
+
+
+##### G1收集器老年代回收过程
+
+G1对于新生代是一定会回收的，对于老年代则是部分回收
+
+初始标记阶段与并发标记阶段，确定好老年代哪些Region需要被回收
+
+<img src="https://tva1.sinaimg.cn/large/008eGmZEgy1gn2oxe7bepj317a0fy0vr.jpg" alt="image-20210127235321541" style="zoom:33%;" align="left"/>
+
+初始标记和并发标记阶段标记好的那些Region就无需等到最后再回收，在最终标记阶段即可被回收
+
+<img src="https://tva1.sinaimg.cn/large/008eGmZEgy1gn2p26ygnfj317c0gogo0.jpg" alt="image-20210127235805749" style="zoom:33%;" align="left"/>
+
+筛选回收
+
+筛选回收阶段，会将该回收的垃圾回收掉，新生代该留下的部分拷贝到Survivor区，老年代中该留下的部分还是拷贝到老年代
+
+<img src="https://tva1.sinaimg.cn/large/008eGmZEgy1gn2p8chr3pj316y0h0whe.jpg" alt="image-20210128000235964" style="zoom:33%;" align="left"/>
+
+<img src="https://tva1.sinaimg.cn/large/008eGmZEgy1gn2p9bhbnmj31740h6q57.jpg" alt="image-20210128000507244" style="zoom:33%;" align="left"/>
+
+##### G1收集器的使用
+
+使用和配置G1
+
+在VM options中输入：
+
+```
+-XX:+UseG1GC
+```
+
+即可开启G1，默认即是G1收集器
+
+典型参数运用：
+
+- `-XX:MaxGCPauseMillis=n`
+
+  最大GC停顿时间，这个是软目标，JVM将尽可能(但不保证)停顿小于这个时间
+
+- `-XX:InitiatingHeapOccupancyPercent=n`
+
+  堆占用了多少的时候就触发GC，默认为45%
+
+- `-XX:NewRatio=n`，默认为2
+
+- `-XX:ServivorRatio=n`，默认为8
+
+- `-XX:MaxTenuringThreshold=n`
+
+  新生代到老年代的岁数，默认为15
+
+- `-XX:ParallelGCThreads=n`
+
+  并行GC的线程数，默认值会根据平台不同而不同
+
+- `-XX:ConcGCThreads=n`
+
+  并发GC使用的线程数
+
+- `-XX:G1ReservePercent=n`
+
+  设置作为空闲空间的预留内存百分比，以降低目标空间溢出的风险，默认值是10%
+
+- `-XX:G1HeapRegionSize=n`
+
+  设置的G1区域的大小。值是2的幂，范围是1MB到32MB。目标是根据最小的Java堆大小划分出约2048个区域
+
+#### 6-10 ZGC收集器，GC性能指标和JVM内存配置原则
+
+##### ZGC收集器
+
+ZGC收集器是JDK11加入的具有实验性质的低延迟收集器，也就是暂时无法商用
+
+ZGC的设计目标是：
+
+支持TB级内存容量，暂停时间低（ < 10ms）,对整个程序吞吐量的影响小于15%
+
+ZGC里面的新技术：**着色指针**和**读屏障**
+
+##### GC性能指标
+
+1. 吞吐量
+
+   吞吐量 = 应用代码执行的时间/运行的总时间
+
+   运行的总时间是应用代码执行的时间加上GC的时间
+
+2. GC负荷
+
+   与吞吐量相反是GC时间/运行的总时间
+
+3. 暂停时间
+
+   就是发生Stop-the-World的总时间
+
+4. GC频率
+
+   就是GC在一个时间段发生的次数
+
+5. 反应速度
+
+   从对象称为垃圾到被回收的时间
+
+6. 交互式的应用通希望暂停时间越少越好
+
+##### JVM内存配置原则
+
+- 新生代尽可能设置大点，如果太小就会导致：
+  - YGC次数更加频繁
+  - 可能导致YGC后的对象进入老年代，如果此时老年代满了就会触发FGC
+- 对于老年代
+  - 针对响应时间优先的应用，由于老年代通常采用并发收集器，因此其大小要综合考虑并发量和并发持续时间等参数
+    - 如果设置小了，可能会造成内存碎片，高回收频率会导致应用暂停
+    - 如果设置大了，会需要较长的回收时间
+  - 针对吞吐量优先的应用，通常设置较大的心声年代和较小的老年代，这样可以尽可能回收大部分短期对象，减少中期对象，而老年代尽量存放长期存活的对象
+- 依据对象的存活周期进行分类，对象优先在新生代分配，长时间存活的对象进入老年代
+- 根据不同代的特点，选取合适的收集算法，少量对象存活适合复制算法；大量对象存活适合标记清除算法或标记整理算法
+
+
+
