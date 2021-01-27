@@ -44,17 +44,26 @@ JVM实战
 | 5-3 案例：操作数栈                                           | [code](https://github.com/jinrunheng/JVM-Practical/tree/main/chapter5/src/main/java/section3) |
 | 5-4 静态分派和动态分派                                       | [code](https://github.com/jinrunheng/JVM-Practical/tree/main/chapter5/src/main/java/section4) |
 | **第六章 垃圾回收**                                          |                                                              |
-| 第六章学习笔记                                               |                                                              |
-| 6-1 垃圾回收基础和根搜索算法                                 |                                                              |
-| 6-2 引用分类                                                 |                                                              |
-| 6-3 案例：各种引用的实现                                     |                                                              |
-| 6-4 垃圾回收基础【跨代引用,记忆集,写屏障,判断垃圾的步骤,STW】 |                                                              |
-| 6-5 垃圾回收算法                                             |                                                              |
-| 6-6 垃圾收集器基础和串行收集器                               |                                                              |
-| 6-7 并行收集器和Parallel Scavenge收集器                      |                                                              |
-| 6-8 CMS收集器                                                |                                                              |
-| 6-9 G1收集器                                                 |                                                              |
-| 6-10 ZGC收集器,GC性能指标和JVM内存配置原则                   |                                                              |
+| 第六章学习笔记                                               | [笔记](https://github.com/jinrunheng/JVM-Practical/blob/main/chapter6/note.md) |
+| 6-1 垃圾回收基础和根搜索算法                                 | [无代码]                                                     |
+| 6-2 引用分类                                                 | [无代码]                                                     |
+| 6-3 案例：各种引用的实现                                     | [code](https://github.com/jinrunheng/JVM-Practical/tree/main/chapter6/src/main/java/section3) |
+| 6-4 垃圾回收基础【跨代引用,记忆集,写屏障,判断垃圾的步骤,STW】 | [code](https://github.com/jinrunheng/JVM-Practical/tree/main/chapter6/src/main/java/section4) |
+| 6-5 垃圾回收算法                                             | [无代码]                                                     |
+| 6-6 垃圾收集器基础和串行收集器                               | [无代码]                                                     |
+| 6-7 并行收集器和Parallel Scavenge收集器                      | [无代码]                                                     |
+| 6-8 CMS收集器                                                | [无代码]                                                     |
+| 6-9 G1收集器                                                 | [无代码]                                                     |
+| 6-10 ZGC收集器,GC性能指标和JVM内存配置原则                   | [无代码]                                                     |
+| **第七章 高效并发**                                          |                                                              |
+| 第七章学习笔记                                               |                                                              |
+| 7-1 Java内存模型和内存见的交互操作                           |                                                              |
+| 7-2 内存间的交互操作的规则                                   |                                                              |
+| 7-3 volatile特性                                             |                                                              |
+| 7-4 指令重排原理和规则                                       |                                                              |
+| 7-5 代码示例：指令重排的各种情况分析                         |                                                              |
+| 7-8 线程安全处理                                             |                                                              |
+| 7-9 锁优化                                                   |                                                              |
 
 
 
