@@ -682,7 +682,7 @@ G1收集器同CMS类似，也分为四个阶段：
 
 ##### G1收集器新生代回收过程
 
-<img src="/Users/macbook/Library/Application Support/typora-user-images/image-20210127232510778.png" alt="image-20210127232510778" style="zoom: 33%;" align="left"/>
+<img src="https://tva1.sinaimg.cn/large/008eGmZEgy1gn4xk257yej31820h0q5l.jpg" alt="image-20210127232510778" style="zoom: 33%;" align="left"/>
 
 如图所示
 
